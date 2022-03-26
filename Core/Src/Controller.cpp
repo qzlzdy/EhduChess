@@ -38,6 +38,9 @@ Controller::Controller() {
 	board[4][0] = WHITE_KING;
 	board[4][7] = BLACK_KING;
 	TftLcd::getInstance()->drawBoard(board);
+
+	// FIXME debug
+	state = MOVED;
 }
 
 bool Controller::isWhite(Piece p){
@@ -72,12 +75,13 @@ void Controller::process(){
 		tcp_connect(tpcb, &addr, 2233, tcpConnected);
 		break;
 	}
-	case CONNECTED:
+	case CONNECTED:{
 		state = BUSY;
 		string data = toFenString() + " " + moves;
 		tcp_write(tpcb, data.c_str(), data.length(), TCP_WRITE_FLAG_COPY);
 		tcp_output(tpcb);
 		break;
+	}
 	case SENT:
 		state = BUSY;
 		break;
@@ -124,6 +128,8 @@ string Controller::toFenString(){
 	return "fen " + buffer.str();
 }
 
+map<struct tcp_pcb *, Controller *> Controller::ctrls;
+
 err_t tcpConnected(void *arg, struct tcp_pcb *tpcb, err_t err){
 	tcp_arg(tpcb, arg);
 	Controller::ctrls[tpcb]->state = Controller::CONNECTED;
@@ -139,8 +145,9 @@ err_t tcpSent(void *arg, struct tcp_pcb *tpcb, u16_t len){
 err_t tcpRecv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err){
 	tcp_arg(tpcb, arg);
 	Controller::ctrls[tpcb]->state = Controller::RECVED;
-	Controller::ctrls[tpcb]->bestmove = string(p->payload, p->len);
-	tcp_recved(tpcb, bestmove.length());
+	Controller::ctrls[tpcb]->bestmove =
+		string(reinterpret_cast<const char *>(p->payload), p->len);
+	tcp_recved(tpcb, Controller::ctrls[tpcb]->bestmove.length());
 	pbuf_free(p);
 	return err;
 }

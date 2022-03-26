@@ -24,10 +24,15 @@ enum Color: uint16_t{
 
 class Displayer {
 public:
+	Displayer(const Displayer &) = delete;
+	Displayer &operator=(const Displayer &) = delete;
+	virtual ~Displayer() = default;
 	virtual void drawBoard(std::array<std::array<Piece, 8>, 8> board) = 0;
 	virtual void drawPiece(int x, int y, Piece p) = 0;
 	virtual void fill(uint16_t bx, uint16_t by, uint16_t ex,
 			  uint16_t ey, Color color) = 0;
+protected:
+	Displayer() = default;
 };
 
 } /* namespace ehdu */

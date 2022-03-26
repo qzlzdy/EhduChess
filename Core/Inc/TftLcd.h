@@ -17,7 +17,9 @@ namespace ehdu {
 
 class TftLcd final : public Displayer{
 public:
-	virtual ~TftLcd() = default;
+	TftLcd(const TftLcd &) = delete;
+	TftLcd &operator=(const TftLcd &) = delete;
+	~TftLcd() = default;
 	static Displayer *getInstance();
 	void drawBoard(std::array<std::array<Piece, 8>, 8> board) override;
 	void drawPiece(int x, int y, Piece p) override;

@@ -67,7 +67,7 @@ int getSpiY();
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	int x = 240 - getSpiX() / 15.833333;
 	int y = getSpiY() / 12.5;
-	Controller::getInstance()->touch(x, y);
+	ctrl->touch(x, y);
 	for(int i = 200; i > 0; --i){
 		for(int k = 1000; k > 0; --k);
 	}
