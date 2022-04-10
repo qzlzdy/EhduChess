@@ -5,12 +5,26 @@
  *      Author: qzlzdy
  */
 
-#include <TftLcd.h>
+#include "TftLcd.h"
 
-#include <main.h>
+#include "main.h"
 #include <utility>
 
 using namespace std;
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_RESET);
+	uint8_t txData[] = {0xD0, 0, 0x90, 0, 0};
+	uint8_t rxData[5];
+	auto hspi = ehdu::TftLcd::getInstance()->getSpi();
+	HAL_SPI_TransmitReceive(hspi, txData, rxData, 5, 1000);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
+	unsigned x = (rxData[1] << 5) | (rxData[2] >> 3);
+	unsigned y = (rxData[3] << 5) | (rxData[4] >> 3);
+	x = 240 - x / 15.833333;
+	y = y / 12.5;
+	ehdu::TftLcd::getInstance()->getController()->touch(x, y);
+}
 
 namespace{
 	array<bool, 900> blank = {
@@ -247,14 +261,7 @@ namespace{
 
 namespace ehdu {
 
-Displayer *TftLcd::getInstance(){
-	if(displayer == nullptr){
-		displayer = new TftLcd;
-	}
-	return displayer;
-}
-
-void TftLcd::drawBoard(array<array<Piece, 8>, 8> board){
+void TftLcd::drawBoard(const array<array<Piece, 8>, 8> &board){
 	for(int i = 0; i < 8; ++i){
 		for(int j = 0; j < 8; ++j){
 			drawPiece(i, j, board[i][j]);
@@ -262,9 +269,10 @@ void TftLcd::drawBoard(array<array<Piece, 8>, 8> board){
 	}
 }
 
-void TftLcd::drawPiece(int x, int y, Piece p){
+void TftLcd::drawPiece(int x, int y, Piece p, bool select){
 	Color front = Controller::isWhite(p) ? WHITE : BLACK;
-	Color back = (x + y) % 2 == 0 ? GREEN : GREY;
+	Color back = select ? YELLOW :
+			     (x + y) % 2 == 0 ? GREEN : GREY;
 	uint16_t bx = x * 30;
 	uint16_t by = y * 30 + 69;
 	auto pixels = dict[p];
@@ -281,7 +289,7 @@ void TftLcd::drawPiece(int x, int y, Piece p){
 }
 
 void TftLcd::fill(uint16_t bx, uint16_t by, uint16_t ex,
-		             uint16_t ey, Color color){
+		          uint16_t ey, Color color){
 	for(int i = by; i <= ey; ++i){
 		setCursor(bx, i);
 		writeReg(0x2C);
@@ -410,8 +418,6 @@ void TftLcd::writeReg(uint8_t reg){
 void TftLcd::writeData(uint16_t data){
 	*(__IO uint16_t *)(0x60020000) = data;
 }
-
-Displayer *TftLcd::displayer = nullptr;
 
 map<Piece, array<bool, 900> *> TftLcd::dict = {
 	{BLANK, &blank},

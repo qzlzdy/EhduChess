@@ -5,9 +5,13 @@
  *      Author: qzlzdy
  */
 
-#include <Controller.h>
+#include "Controller.h"
 
-#include <TftLcd.h>
+#include "Ethernet.h"
+#include "TftLcd.h"
+
+#include <algorithm>
+#include <cmath>
 #include <sstream>
 
 using namespace std;
@@ -15,9 +19,8 @@ using namespace std;
 namespace ehdu {
 
 Controller::Controller() {
-	state = IDLE;
+	state = CTRL_WAIT;
 	moves = "moves";
-	tpcb = nullptr;
 	for(int y = 2; y <= 5; ++y){
 		for(int x = 0; x < 8; ++x){
 			board[x][y] = BLANK;
@@ -38,9 +41,6 @@ Controller::Controller() {
 	board[4][0] = WHITE_KING;
 	board[4][7] = BLACK_KING;
 	TftLcd::getInstance()->drawBoard(board);
-
-	// FIXME debug
-	state = MOVED;
 }
 
 bool Controller::isWhite(Piece p){
@@ -57,52 +57,173 @@ bool Controller::isWhite(Piece p){
 	}
 }
 
+bool Controller::isBlack(Piece p){
+	switch(p){
+	case BLACK_PAWN:
+	case BLACK_ROOK:
+	case BLACK_KNIGHT:
+	case BLACK_BISHOP:
+	case BLACK_QUEEN:
+	case BLACK_KING:
+		return true;
+	default:
+		return false;
+	}
+}
+
 bool Controller::isBlank(Piece p){
 	return p == BLANK;
 }
 
+void Controller::acceptMove(){
+	int bx = bestmove[0] - 'a';
+	int by = bestmove[1] - '0';
+	int ex = bestmove[2] - 'a';
+	int ey = bestmove[3] - '0';
+	board[ex][ey] = board[bx][by];
+	board[bx][by] = BLANK;
+	TftLcd::getInstance()->drawPiece(bx, by, BLANK);
+	TftLcd::getInstance()->drawPiece(ex, ey, board[ex][ey]);
+}
+
+bool Controller::isLegal(int ex, int ey) const{
+	switch(board[selx][sely]){
+	case WHITE_PAWN:
+		return isPawnLegal(ex, ey);
+	case WHITE_ROOK:
+		return isRookLegal(ex, ey);
+	case WHITE_KNIGHT:
+		return isKnightLegal(ex, ey);
+	case WHITE_BISHOP:
+		return isBishopLegal(ex, ey);
+	case WHITE_QUEEN:
+	 	return isQueenLegal(ex, ey);
+	case WHITE_KING:
+		return isKingLegal(ex, ey);
+	default:
+		return false;
+	}
+}
+
+bool Controller::isPawnLegal(int ex, int ey) const{
+	if(ey - sely != 1){
+		return false;
+	}
+	switch(ex - selx){
+	case 0:
+		return isBlank(board[ex][ey]);
+	case 1:
+	case -1:
+		return isBlack(board[ex][ey]);
+	default:
+		return false;
+	}
+}
+
+bool Controller::isRookLegal(int ex, int ey) const{
+	int dx = ex == selx ? 0 : ex > selx ? 1 : -1;
+	int dy = ey == sely ? 0 : ey > sely ? 1 : -1;
+	if(dx != 0 && dy != 0){
+		return false;
+	}
+	return checkBlank(dx, dy, ex, ey);
+}
+
+bool Controller::isKnightLegal(int ex, int ey) const{
+	return (abs(ex - selx) == 1 && abs(ey - sely) == 2) ||
+		   (abs(ex - selx) == 2 && abs(ey - sely) == 1);
+}
+
+bool Controller::isBishopLegal(int ex, int ey) const{
+	if(abs(ex - selx) != abs(ey - sely)){
+		return false;
+	}
+	int dx = ex > selx ? 1 : -1;
+	int dy = ey > sely ? 1 : -1;
+	return checkBlank(dx, dy, ex, ey);
+}
+
+bool Controller::isQueenLegal(int ex, int ey) const{
+	return isRookLegal(ex, ey) || isBishopLegal(ex, ey);
+}
+
+bool Controller::isKingLegal(int ex, int ey) const{
+	return abs(ex - selx) + abs(ey - sely) <= 2;
+}
+
+void Controller::move(int ex, int ey){
+	TftLcd::getInstance()->drawPiece(selx, sely, BLANK);
+	TftLcd::getInstance()->drawPiece(ex, ey, board[selx][sely]);
+	board[ex][ey] = board[selx][sely];
+	board[selx][sely] = BLANK;
+	moves += " " + "abcdefgh"[selx] + "12345678"[sely]
+			     + "abcdefgh"[ex] + "12345678"[ey];
+}
+
 void Controller::process(){
+	if(state == CTRL_MOVED){
+		Ethernet::getInstance()->setPosition(toFenString() + " " + moves);
+		state = CTRL_COMPUTING;
+	}
+}
+
+void Controller::select(int x, int y){
+	selx = x;
+	sely = y;
+	TftLcd::getInstance()->drawPiece(x, y, board[x][y], true);
+}
+
+void Controller::setBestmove(const string &m){
+	bestmove = m;
+	state = CTRL_FINISHED;
+}
+
+void Controller::touch(int x, int y){
 	switch(state){
-	case SELECTED:
+	case CTRL_WAIT:
+		if(isWhite(board[x][y])){
+			select(x, y);
+			state = CTRL_SELECTED;
+		}
 		break;
-	case MOVED:{
-		state = BUSY;
-		tpcb = tcp_new();
-		ctrls[tpcb] = this;
-		tcp_sent(tpcb, tcpSent);
-		tcp_recv(tpcb, tcpRecv);
-		ip_addr_t addr = IPADDR4_INIT_BYTES(169, 254, 82, 59);
-		tcp_connect(tpcb, &addr, 2233, tcpConnected);
+	case CTRL_SELECTED:
+		if(selx == x && sely == y){
+			unselect();
+			state = CTRL_WAIT;
+		}
+		else if(!isWhite(board[x][y]) && isLegal(x, y)){
+			move(x, y);
+			state = CTRL_MOVED;
+		}
 		break;
-	}
-	case CONNECTED:{
-		state = BUSY;
-		string data = toFenString() + " " + moves;
-		tcp_write(tpcb, data.c_str(), data.length(), TCP_WRITE_FLAG_COPY);
-		tcp_output(tpcb);
-		break;
-	}
-	case SENT:
-		state = BUSY;
-		break;
-	case RECVED:
-		ctrls.erase(tpcb);
-		tcp_close(tpcb);
-		// TODO analyze bestmove and update LCD
-		state = IDLE;
-		break;
+	case CTRL_FINISHED:
+		acceptMove();
+		state = CTRL_WAIT;
 	default:
 		break;
 	}
 }
 
-void Controller::touch(int x, int y){
-	if(0 <= x && x < 240 && 40 <= y && y < 280){
-		// TODO game logic
-	}
+void Controller::unselect(){
+	TftLcd::getInstance()->drawPiece(selx, sely, board[selx][sely]);
 }
 
-string Controller::toFenString(){
+bool Controller::checkBlank(int dx, int dy, int ex, int ey) const{
+	int i = selx + dx;
+	int j = sely + dy;
+	bool canMove = true;
+	while(i != ex || j != ey){
+		if(isBlank(board[i][j])){
+			canMove = false;
+			break;
+		}
+		i += dx;
+		j += dy;
+	}
+	return canMove;
+}
+
+string Controller::toFenString() const{
 	ostringstream buffer;
 	for(int y = 7; y >= 0; --y){
 		int blank = 0;
@@ -126,30 +247,6 @@ string Controller::toFenString(){
 		}
 	}
 	return "fen " + buffer.str();
-}
-
-map<struct tcp_pcb *, Controller *> Controller::ctrls;
-
-err_t tcpConnected(void *arg, struct tcp_pcb *tpcb, err_t err){
-	tcp_arg(tpcb, arg);
-	Controller::ctrls[tpcb]->state = Controller::CONNECTED;
-	return err;
-}
-
-err_t tcpSent(void *arg, struct tcp_pcb *tpcb, u16_t len){
-	tcp_arg(tpcb, arg);
-	Controller::ctrls[tpcb]->state = Controller::SENT;
-	return ERR_OK;
-}
-
-err_t tcpRecv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err){
-	tcp_arg(tpcb, arg);
-	Controller::ctrls[tpcb]->state = Controller::RECVED;
-	Controller::ctrls[tpcb]->bestmove =
-		string(reinterpret_cast<const char *>(p->payload), p->len);
-	tcp_recved(tpcb, Controller::ctrls[tpcb]->bestmove.length());
-	pbuf_free(p);
-	return err;
 }
 
 } /* namespace ehdu */

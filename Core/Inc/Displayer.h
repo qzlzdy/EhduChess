@@ -19,18 +19,22 @@ enum Color: uint16_t{
 	BLUE = 0x6E7F,
 	GREEN = 0x1C08,
 	GREY = 0x8C0E,
-	WHITE = 0xFFFF
+	WHITE = 0xFFFF,
+	YELLOW = 0xDE87
 };
 
 class Displayer {
 public:
 	Displayer(const Displayer &) = delete;
 	Displayer &operator=(const Displayer &) = delete;
+	Displayer(Displayer &&) = default;
+	Displayer &operator=(Displayer &&) = default;
 	virtual ~Displayer() = default;
-	virtual void drawBoard(std::array<std::array<Piece, 8>, 8> board) = 0;
-	virtual void drawPiece(int x, int y, Piece p) = 0;
+	virtual void drawBoard(
+			const std::array<std::array<Piece, 8>, 8> &board) = 0;
+	virtual void drawPiece(int x, int y, Piece p, bool select) = 0;
 	virtual void fill(uint16_t bx, uint16_t by, uint16_t ex,
-			  uint16_t ey, Color color) = 0;
+				      uint16_t ey, Color color) = 0;
 protected:
 	Displayer() = default;
 };

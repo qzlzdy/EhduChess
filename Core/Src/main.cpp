@@ -22,8 +22,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <Controller.h>
-#include <string>
+#include "Controller.h"
+#include "Ethernet.h"
+#include "TftLcd.h"
 
 using namespace std;
 using namespace ehdu;
@@ -58,20 +59,12 @@ static void MX_GPIO_Init(void);
 static void MX_FSMC_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
-int getSpiX();
-int getSpiY();
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	int x = 240 - getSpiX() / 15.833333;
-	int y = getSpiY() / 12.5;
-	ctrl->touch(x, y);
-	for(int i = 200; i > 0; --i){
-		for(int k = 1000; k > 0; --k);
-	}
-}
+
 /* USER CODE END 0 */
 
 /**
@@ -110,6 +103,9 @@ int main(void)
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
   ctrl = new Controller;
+  TftLcd::getInstance()->setController(ctrl);
+  TftLcd::getInstance()->setSpi(&hspi1);
+  Ethernet::getInstance()->setController(ctrl);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -364,25 +360,7 @@ static void MX_FSMC_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-int getSpiX(){
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_RESET);
-	uint8_t txData[] = {0xD0, 0, 0};
-	uint8_t rxData[3];
-	HAL_SPI_TransmitReceive(&hspi1, txData, rxData, 3, 1000);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
-	int x = (rxData[1] << 5) | (rxData[2] >> 3);
-	return x;
-}
 
-int getSpiY(){
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_RESET);
-	uint8_t txData[] = {0x90, 0, 0};
-	uint8_t rxData[3];
-	HAL_SPI_TransmitReceive(&hspi1, txData, rxData, 3, 1000);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
-	int y = (rxData[1] << 5) | (rxData[2] >> 3);
-	return y;
-}
 /* USER CODE END 4 */
 
 /**

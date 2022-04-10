@@ -8,10 +8,10 @@
 #ifndef INC_CONTROLLER_H_
 #define INC_CONTROLLER_H_
 
-#include <lwip.h>
+#include "LoopInterface.h"
+
 #include <array>
 #include <cstdint>
-#include <map>
 #include <string>
 
 namespace ehdu {
@@ -32,40 +32,47 @@ enum Piece: uint8_t{
 	BLANK = ' '
 };
 
-class Controller {
+class Controller: public LoopInterface{
 public:
 	Controller();
+	Controller(const Controller &) = default;
+	Controller &operator=(const Controller &) = default;
+	Controller(Controller &&) = default;
+	Controller &operator=(Controller &&) = default;
+	~Controller() = default;
 	static bool isWhite(Piece p);
+	static bool isBlack(Piece p);
 	static bool isBlank(Piece p);
-	void process();
+	void acceptMove();
+	bool isLegal(int ex, int ey) const;
+	bool isPawnLegal(int ex, int ey) const;
+	bool isRookLegal(int ex, int ey) const;
+	bool isKnightLegal(int ex, int ey) const;
+	bool isBishopLegal(int ex, int ey) const;
+	bool isQueenLegal(int ex, int ey) const;
+	bool isKingLegal(int ex, int ey) const;
+	void move(int x, int y);
+	void process() override;
+	void select(int x, int y);
+	void setBestmove(const std::string &m);
 	void touch(int x, int y);
+	void unselect();
 private:
-	enum State{
-		IDLE,
-		SELECTED,
-		MOVED,
-		CONNECTED,
-		SENT,
-		RECVED,
-		BUSY
+	enum CtrlState{
+		CTRL_WAIT,
+		CTRL_SELECTED,
+		CTRL_MOVED,
+		CTRL_COMPUTING,
+		CTRL_FINISHED
 	};
-	std::string toFenString();
-	State state;
+	bool checkBlank(int dx, int dy, int ex, int ey) const;
+	std::string toFenString() const;
 	std::array<std::array<Piece, 8>, 8> board;
-	std::string moves;
 	std::string bestmove;
-	struct tcp_pcb *tpcb;
-	static std::map<struct tcp_pcb *, Controller *> ctrls;
-	friend err_t tcpConnected(void *arg, struct tcp_pcb *tpcb, err_t err);
-	friend err_t tcpSent(void *arg, struct tcp_pcb *tpcb, u16_t len);
-	friend err_t tcpRecv(void *arg, struct tcp_pcb *tpcb,
-						 struct pbuf *p, err_t err);
+	std::string moves;
+	CtrlState state;
+	int selx, sely;
 };
-
-
-err_t tcpConnected(void *arg, struct tcp_pcb *tpcb, err_t err);
-err_t tcpSent(void *arg, struct tcp_pcb *tpcb, u16_t len);
-err_t tcpRecv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
 
 } /* namespace ehdu */
 
