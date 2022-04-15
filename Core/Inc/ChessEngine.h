@@ -8,8 +8,7 @@
 #ifndef INC_CHESSENGINE_H_
 #define INC_CHESSENGINE_H_
 
-#include "ControllerInterface.h"
-
+#include <BackwardInterface.h>
 #include <string>
 
 namespace ehdu{

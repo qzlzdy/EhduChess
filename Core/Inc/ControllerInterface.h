@@ -1,29 +1,27 @@
 /*
  * ControllerInterface.h
  *
- *  Created on: 2022年4月9日
+ *  Created on: 2022年4月13日
  *      Author: qzlzdy
  */
 
 #ifndef INC_CONTROLLERINTERFACE_H_
 #define INC_CONTROLLERINTERFACE_H_
 
-#include "Controller.h"
+#include <string>
 
 namespace ehdu{
 
 class ControllerInterface{
 public:
-	ControllerInterface();
+	ControllerInterface() = default;
 	ControllerInterface(const ControllerInterface &) = default;
 	ControllerInterface &operator=(const ControllerInterface &) = default;
 	ControllerInterface(ControllerInterface &&) = default;
 	ControllerInterface &operator=(ControllerInterface &&) = default;
-	virtual ~ControllerInterface() = default;
-	virtual Controller *getController();
-	virtual void setController(Controller *c);
-private:
-	Controller *ctrl;
+	virtual ~ControllerInterface();
+	virtual void touch(int x, int y) = 0;
+	virtual void setBestmove(const std::string &m) = 0;
 };
 
 }

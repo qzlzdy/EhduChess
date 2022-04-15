@@ -8,6 +8,7 @@
 #ifndef INC_CONTROLLER_H_
 #define INC_CONTROLLER_H_
 
+#include "ControllerInterface.h"
 #include "LoopInterface.h"
 
 #include <array>
@@ -32,7 +33,7 @@ enum Piece: uint8_t{
 	BLANK = ' '
 };
 
-class Controller: public LoopInterface{
+class Controller: public ControllerInterface, public LoopInterface{
 public:
 	Controller();
 	Controller(const Controller &) = default;
@@ -54,8 +55,8 @@ public:
 	void move(int x, int y);
 	void process() override;
 	void select(int x, int y);
-	void setBestmove(const std::string &m);
-	void touch(int x, int y);
+	void setBestmove(const std::string &m) override;
+	void touch(int x, int y) override;
 	void unselect();
 private:
 	enum CtrlState{
