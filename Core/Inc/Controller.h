@@ -17,22 +17,6 @@
 
 namespace ehdu {
 
-enum Piece: uint8_t{
-	BLACK_PAWN = 'P',
-	BLACK_ROOK = 'R',
-	BLACK_KNIGHT = 'N',
-	BLACK_BISHOP = 'B',
-	BLACK_QUEEN = 'Q',
-	BLACK_KING = 'K',
-	WHITE_PAWN = 'p',
-	WHITE_ROOK = 'r',
-	WHITE_KNIGHT = 'n',
-	WHITE_BISHOP = 'b',
-	WHITE_QUEEN = 'q',
-	WHITE_KING = 'k',
-	BLANK = ' '
-};
-
 class Controller: public ControllerInterface, public LoopInterface{
 public:
 	Controller();

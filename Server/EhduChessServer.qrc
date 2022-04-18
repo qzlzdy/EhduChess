@@ -1,0 +1,18 @@
+<RCC>
+    <qresource prefix="/">
+        <file>backgrounds/even.png</file>
+        <file>backgrounds/odd.png</file>
+        <file>pieces/black/bishop.png</file>
+        <file>pieces/black/king.png</file>
+        <file>pieces/black/knight.png</file>
+        <file>pieces/black/pawn.png</file>
+        <file>pieces/black/queen.png</file>
+        <file>pieces/black/rook.png</file>
+        <file>pieces/white/bishop.png</file>
+        <file>pieces/white/king.png</file>
+        <file>pieces/white/knight.png</file>
+        <file>pieces/white/pawn.png</file>
+        <file>pieces/white/queen.png</file>
+        <file>pieces/white/rook.png</file>
+    </qresource>
+</RCC>
