@@ -14,24 +14,29 @@ TcpServer::TcpServer(QObject *parent): QObject(parent), server(this){
 }
 
 void TcpServer::setBestmove(const QString &bestmove){
-    client->write(bestmove.toUtf8().constData());
+    client->write((bestmove + "\n").toUtf8().constData());
+    client->flush();
 }
 
 void TcpServer::tcpConnected(){
     client = server.nextPendingConnection();
     emit emitLog(tr("Connection established"));
     connect(client, &QTcpSocket::readyRead, this, &TcpServer::tcpRecv);
+    connect(client, &QTcpSocket::bytesWritten, this, &TcpServer::tcpSent);
 }
 
 void TcpServer::tcpRecv(){
-    char buffer[80];
-    qint64 length = client->readLine(buffer, 80);
-    emit emitLog(QString::number(length) + tr(" bytes received"));
-    if(memcmp(buffer, "fen", 3) == 0){
-        emit setPosition(QString::fromUtf8(buffer, length));
-    }
-    else{
-        emit updateBoard(QString::fromUtf8(buffer, length));
+    char buffer[256];
+    qint64 length = client->readLine(buffer, 256);
+    while(length != 0){
+        emit emitLog(QString::number(length) + tr(" bytes received"));
+        if(memcmp(buffer, "fen ", 4) == 0){
+            emit setPosition(QString::fromUtf8(buffer, length));
+        }
+        else{
+            emit updateBoard(QString::fromUtf8(buffer, length));
+        }
+        length = client->readLine(buffer, 80);
     }
 }
 

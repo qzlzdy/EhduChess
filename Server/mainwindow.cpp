@@ -108,6 +108,9 @@ void MainWindow::updatePiece(uint8_t p){
     case 'P':
         filename += "white/pawn";
         break;
+    default:
+        emitSysLog(tr("Unknown piece type: ") + QString::number(p));
+        break;
     }
     filename += ".png";
     QImage img(filename);
@@ -138,4 +141,5 @@ void MainWindow::updateBoard(const QString &fen){
         }
         ++i;
     }
+    emitGuiLog(tr("Board updated"));
 }

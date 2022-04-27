@@ -14,6 +14,7 @@ QObject(parent), engine(this), machine(this){
     QString stockfish =
         "D:/src/Qt/EhduChessServer/stockfish/stockfish_14.1_win_x64_avx2.exe";
     engine.start(stockfish);
+    engine.waitForStarted();
 }
 
 ChessEngine::~ChessEngine(){
@@ -54,22 +55,28 @@ void ChessEngine::initStateMachine(){
     machine.start();
 }
 
+#include <iostream>
+using namespace std;
+
 void ChessEngine::engineRecv(){
     char buffer[256];
     qint64 length = engine.readLine(buffer, 256);
-    if(length > 9 && memcmp(buffer, "Stockfish", 9) == 0){
-        emit engineStarted();
-    }
-    else if(length == 5 && memcmp(buffer, "uciok", 5) == 0){
-        emit uciok();
-    }
-    else if(length == 7 && memcmp(buffer, "readyok", 7) == 0){
-        emit readyok();
-    }
-    else if(length > 8 && memcmp(buffer, "bestmove", 8) == 0){
-        emit finishCalculate();
-        emit emitLog(QString::fromUtf8(buffer, length));
-        emit setBestmove(QString::fromUtf8(buffer, length));
+    while(length != 0){
+        if(length > 9 && memcmp(buffer, "Stockfish", 9) == 0){
+            emit engineStarted();
+        }
+        else if(length == 5 && memcmp(buffer, "uciok", 5) == 0){
+            emit uciok();
+        }
+        else if(length == 7 && memcmp(buffer, "readyok", 7) == 0){
+            emit readyok();
+        }
+        else if(length > 8 && memcmp(buffer, "bestmove", 8) == 0){
+            emit finishCalculate();
+            emit emitLog(QString::fromUtf8(buffer, length - 2));
+            emit setBestmove(QString::fromUtf8(buffer, length - 2));
+        }
+        length = engine.readLine(buffer, 256);
     }
 }
 
