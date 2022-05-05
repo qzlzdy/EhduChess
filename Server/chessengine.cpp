@@ -23,7 +23,7 @@ ChessEngine::~ChessEngine(){
 }
 
 void ChessEngine::setPosition(const QString &fen){
-    engine.write(("position " + fen + "\n").toUtf8().constData());
+    engine.write((fen + "\n").toUtf8().constData());
     emit emitLog(tr("Start calculating"));
     emit startCalculate();
     engine.write("go depth 20\n");

@@ -30,7 +30,7 @@ void TcpServer::tcpRecv(){
     qint64 length = client->readLine(buffer, 256);
     while(length != 0){
         emit emitLog(QString::number(length) + tr(" bytes received"));
-        if(memcmp(buffer, "fen ", 4) == 0){
+        if(memcmp(buffer, "position", 8) == 0){
             emit setPosition(QString::fromUtf8(buffer, length));
         }
         else{
