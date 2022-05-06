@@ -9,7 +9,6 @@
 using namespace std;
 
 err_t tcpConnected(void *arg, tcp_pcb *tpcb, err_t err){
-	ehdu::Ethernet::getInstance()->state = ehdu::Ethernet::NET_IDLE;
 	return err;
 }
 
@@ -34,11 +33,14 @@ Ethernet::~Ethernet(){
 void Ethernet::setPosition(const string &fen){
 	tcp_write(tpcb, fen.c_str(), fen.length(), TCP_WRITE_FLAG_COPY);
 	tcp_output(tpcb);
-	state = NET_SENT;
+}
+
+void Ethernet::updatePieces(const string &fen){
+	tcp_write(tpcb, fen.c_str(), fen.length(), TCP_WRITE_FLAG_COPY);
+	tcp_output(tpcb);
 }
 
 Ethernet::Ethernet(){
-	state = NET_INIT;
 	tpcb = tcp_new();
 	tcp_sent(tpcb, tcpSent);
 	tcp_recv(tpcb, tcpRecv);

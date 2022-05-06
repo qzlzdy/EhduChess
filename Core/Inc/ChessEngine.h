@@ -13,7 +13,7 @@
 
 namespace ehdu{
 
-class ChessEngine: public ControllerInterface{
+class ChessEngine: public BackwardInterface{
 public:
 	ChessEngine() = default;
 	ChessEngine(const ChessEngine &) = default;
@@ -22,6 +22,7 @@ public:
 	ChessEngine &operator=(ChessEngine &&) = default;
 	virtual ~ChessEngine() = default;
 	virtual void setPosition(const std::string &fen) = 0;
+	virtual void updatePieces(const std::string &fen) = 0;
 };
 
 }

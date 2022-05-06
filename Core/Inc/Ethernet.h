@@ -28,15 +28,9 @@ public:
 	Ethernet &operator=(Ethernet &&) = default;
 	~Ethernet();
 	void setPosition(const std::string &fen) override;
+	void updatePieces(const std::string &fen) override;
 private:
-	enum NetState{
-		NET_INIT,
-		NET_IDLE,
-		NET_SENT,
-		NET_RECVED,
-	};
 	Ethernet();
-	NetState state;
 	tcp_pcb *tpcb;
 	friend class Singleton<Ethernet>;
 	friend err_t ::tcpConnected(void *arg, tcp_pcb *tpcb, err_t err);

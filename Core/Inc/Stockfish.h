@@ -12,6 +12,10 @@ public:
     static std::string move(Move m);
     static std::string square(Square s);
     Position();
+    Position(const Position &) = default;
+    Position &operator=(const Position &) = default;
+    Position(Position &&) = default;
+    Position &operator=(Position &&) = default;
     virtual ~Position() = default;
     BitBoard blockers_for_king(Color c) const;
     bool can_castle(CastlingRights cr) const;
@@ -30,11 +34,12 @@ public:
     Square square(Color c) const{
         return lsb(pieces(c, Pt));
     }
-public:  // FIXME
+protected:
     void do_move(Move m);
     Piece piece_on(Square s) const;
     void set(const std::string &fenStr);
     Move to_move(std::string &str);
+    Piece board[SQUARE_NB];
 private:
     BitBoard attackers_to(Square s) const;
     BitBoard attackers_to(Square s, BitBoard occupied) const;
@@ -62,7 +67,6 @@ private:
     BitBoard slider_blockers(BitBoard sliders, Square s, BitBoard &pinners) const;
     BitBoard pieces(PieceType pt1, PieceType pt2) const;
     BitBoard pieces(Color c, PieceType pt1, PieceType pt2) const;
-    Piece board[SQUARE_NB];
     Color sideToMove;
     BitBoard byColorBB[COLOR_NB];
     BitBoard byTypeBB[PIECE_TYPE_NB];

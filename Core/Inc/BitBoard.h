@@ -6,15 +6,6 @@
 
 namespace ehdu{
 
-class Magic{
-public:
-    unsigned index(BitBoard occupied) const;
-    BitBoard mask;
-    BitBoard magic;
-    BitBoard *attacks;
-    unsigned shift;
-};
-
 constexpr BitBoard Rank1BB = 0xFF;
 constexpr BitBoard Rank2BB = Rank1BB << (8 * 1);
 constexpr BitBoard Rank3BB = Rank1BB << (8 * 2);
@@ -36,10 +27,6 @@ constexpr BitBoard FileHBB = FileABB << 7;
 extern BitBoard PawnAttacks[COLOR_NB][SQUARE_NB];
 extern BitBoard PseudoAttacks[PIECE_TYPE_NB][SQUARE_NB];
 
-extern Magic BishopMagics[SQUARE_NB];
-extern Magic RookMagics[SQUARE_NB];
-
-extern uint8_t PopCnt16[1 << 16];   // FIXME DELETE
 extern uint8_t SquareDistance[SQUARE_NB][SQUARE_NB];
 
 extern BitBoard BetweenBB[SQUARE_NB][SQUARE_NB];
@@ -108,15 +95,17 @@ BitBoard attacks_bb(Square s){
     return PseudoAttacks[Pt][s];
 }
 
+BitBoard sliding_attack(PieceType pt, Square sq, BitBoard occupied);
+
 template<PieceType Pt>
 BitBoard attacks_bb(Square s, BitBoard occupied){
     switch(Pt){
     case BISHOP:
-        return BishopMagics[s].attacks[BishopMagics[s].index(occupied)];
+        return sliding_attack(BISHOP, s, occupied);
     case ROOK:
-        return RookMagics[s].attacks[RookMagics[s].index(occupied)];
+        return sliding_attack(ROOK, s, occupied);
     case QUEEN:
-        return attacks_bb<BISHOP>(s, occupied) | attacks_bb<ROOK>(s, occupied);
+        return sliding_attack(BISHOP, s, occupied) | sliding_attack(ROOK, s, occupied);
     default:
         return PseudoAttacks[Pt][s];
     }

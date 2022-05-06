@@ -12,22 +12,6 @@
 
 namespace ehdu{
 
-enum Piece: uint8_t{
-	WHITE_PAWN = 'P',
-	WHITE_ROOK = 'R',
-	WHITE_KNIGHT = 'N',
-	WHITE_BISHOP = 'B',
-	WHITE_QUEEN = 'Q',
-	WHITE_KING = 'K',
-	BLACK_PAWN = 'p',
-	BLACK_ROOK = 'r',
-	BLACK_KNIGHT = 'n',
-	BLACK_BISHOP = 'b',
-	BLACK_QUEEN = 'q',
-	BLACK_KING = 'k',
-	BLANK = ' '
-};
-
 class ControllerInterface{
 public:
 	ControllerInterface() = default;
@@ -35,9 +19,27 @@ public:
 	ControllerInterface &operator=(const ControllerInterface &) = default;
 	ControllerInterface(ControllerInterface &&) = default;
 	ControllerInterface &operator=(ControllerInterface &&) = default;
-	virtual ~ControllerInterface();
+	virtual ~ControllerInterface() = default;
+	virtual void acceptMove() = 0;
+	virtual void process() = 0;
+	virtual void select(int x, int y) = 0;
+	virtual void touch(int x) = 0;
 	virtual void touch(int x, int y) = 0;
+	virtual void unselect() = 0;
 	virtual void setBestmove(const std::string &m) = 0;
+protected:
+	enum CtrlState{
+		CTRL_WAIT,
+		CTRL_SELECTED,
+		CTRL_MOVED,
+		CTRL_PROMOTION,
+		CTRL_COMPUTING,
+		CTRL_FINISHED
+	};
+	CtrlState state;
+	std::string currmove;
+	std::string bestmove;
+	int selx, sely;
 };
 
 }

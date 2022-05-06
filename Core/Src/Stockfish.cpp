@@ -2,16 +2,23 @@
 
 #include <cctype>
 #include <cstring>
-#include <mutex>
 #include <sstream>
-#include <QGlobalStatic>
 
-#include <iostream>
 using namespace std;
 
 namespace{
 
+typedef bool once_flag;
+
 once_flag BitBoardInit;
+
+template<class Callable, class... Args>
+void call_once(once_flag &flag, Callable &&f, Args &&... args){
+	if(!flag){
+		flag = true;
+		f(args...);
+	}
+}
 
 }
 

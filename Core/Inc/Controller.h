@@ -9,7 +9,7 @@
 #define INC_CONTROLLER_H_
 
 #include "ControllerInterface.h"
-#include "LoopInterface.h"
+#include "Stockfish.h"
 
 #include <array>
 #include <cstdint>
@@ -17,7 +17,7 @@
 
 namespace ehdu {
 
-class Controller: public ControllerInterface, public LoopInterface{
+class Controller: public ControllerInterface, public Position{
 public:
 	Controller();
 	Controller(const Controller &) = default;
@@ -25,38 +25,13 @@ public:
 	Controller(Controller &&) = default;
 	Controller &operator=(Controller &&) = default;
 	~Controller() = default;
-	static bool isWhite(Piece p);
-	static bool isBlack(Piece p);
-	static bool isBlank(Piece p);
-	void acceptMove();
-	bool isLegal(int ex, int ey) const;
-	bool isPawnLegal(int ex, int ey) const;
-	bool isRookLegal(int ex, int ey) const;
-	bool isKnightLegal(int ex, int ey) const;
-	bool isBishopLegal(int ex, int ey) const;
-	bool isQueenLegal(int ex, int ey) const;
-	bool isKingLegal(int ex, int ey) const;
-	void move(int x, int y);
+	void acceptMove() override;
 	void process() override;
-	void select(int x, int y);
-	void setBestmove(const std::string &m) override;
+	void select(int x, int y) override;
+	void touch(int x) override;
 	void touch(int x, int y) override;
-	void unselect();
-private:
-	enum CtrlState{
-		CTRL_WAIT,
-		CTRL_SELECTED,
-		CTRL_MOVED,
-		CTRL_COMPUTING,
-		CTRL_FINISHED
-	};
-	bool checkBlank(int dx, int dy, int ex, int ey) const;
-	std::string toFenString() const;
-	std::array<std::array<Piece, 8>, 8> board;
-	std::string bestmove;
-	std::string moves;
-	CtrlState state;
-	int selx, sely;
+	void unselect() override;
+	void setBestmove(const std::string &m) override;
 };
 
 } /* namespace ehdu */

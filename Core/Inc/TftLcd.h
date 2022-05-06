@@ -12,7 +12,7 @@
 #include "Singleton.h"
 #include "SpiInterface.h"
 #include "TouchScreen.h"
-
+#include <array>
 #include <map>
 
 namespace ehdu {
@@ -26,16 +26,17 @@ public:
 	TftLcd(TftLcd &&) = default;
 	TftLcd &operator=(TftLcd &&) = default;
 	~TftLcd() = default;
-	void drawBoard(const std::array<std::array<Piece, 8>, 8> &board) override;
+	void drawBoard(const Piece board[SQUARE_NB]) override;
 	void drawPiece(int x, int y, Piece p, bool select = false) override;
 	void fill(uint16_t bx, uint16_t by, uint16_t ex,
-			  uint16_t ey, Color color) override;
+			  uint16_t ey, RgbColor color) override;
 private:
 	TftLcd();
+	void drawPromotion();
 	void setCursor(uint16_t x, uint16_t y);
 	void writeReg(uint8_t reg);
 	void writeData(uint16_t data);
-	static std::map<Piece, std::array<bool, 900> *> dict;
+	static std::map<Piece, std::array<uint32_t, 30> *> dict;
 	friend class Singleton<TftLcd>;
 };
 

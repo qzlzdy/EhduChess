@@ -22,12 +22,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-//#include "Controller.h"
-//#include "Ethernet.h"
-//#include "TftLcd.h"
+#include "Controller.h"
+#include "Ethernet.h"
+#include "TftLcd.h"
 
 using namespace std;
-//using namespace ehdu;
+using namespace ehdu;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,7 +50,7 @@ using namespace std;
 SRAM_HandleTypeDef hsram1;
 
 /* USER CODE BEGIN PV */
-//Controller *ctrl = nullptr;
+Controller *ctrl = nullptr;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,20 +102,18 @@ int main(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
-//  ctrl = new Controller;
-//  TftLcd::getInstance()->setController(ctrl);
-//  TftLcd::getInstance()->setSpi(&hspi1);
-//  Ethernet::getInstance()->setController(ctrl);
+  ctrl = new Controller;
+  TftLcd::getInstance()->setController(ctrl);
+  TftLcd::getInstance()->setSpi(&hspi1);
+  Ethernet::getInstance()->setController(ctrl);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  __builtin_popcountll(1);
-  __builtin_ctzll(1);
   while (1)
   {
 	MX_LWIP_Process();
-//	ctrl->process();
+	ctrl->process();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

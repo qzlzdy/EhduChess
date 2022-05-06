@@ -12,7 +12,7 @@
 
 namespace ehdu{
 
-class TouchScreen: public ControllerInterface{
+class TouchScreen: public BackwardInterface{
 public:
 	TouchScreen(const TouchScreen &) = delete;
 	TouchScreen &operator=(const TouchScreen &) = delete;
