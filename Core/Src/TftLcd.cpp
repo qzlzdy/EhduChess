@@ -8,6 +8,7 @@
 #include "TftLcd.h"
 
 #include "main.h"
+#include <cmath>
 #include <utility>
 
 using namespace std;
@@ -21,12 +22,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
 	unsigned x = (rxData[1] << 5) | (rxData[2] >> 3);
 	unsigned y = (rxData[3] << 5) | (rxData[4] >> 3);
-	x = 240 - x / 15.833333;
-	y = y / 12.5;
-	if(y < 35){
+	x = round(240 - x / 15.833333);
+	y = round(y / 12.5);
+	if(y < 30){
+		x = round(x / 30.0);
 		ehdu::TftLcd::getInstance()->getController()->touch(x);
 	}
 	else{
+		x = round(x / 30.0);
+		y = round((y - 40) / 30.0);
 		ehdu::TftLcd::getInstance()->getController()->touch(x, y);
 	}
 }

@@ -29,17 +29,18 @@ void Controller::acceptMove(){
 		m = string(bestmove.begin() + 9, bestmove.begin() + 13);
 	}
 	do_move(to_move(m));
-	TftLcd::getInstance()->drawBoard(board);
-	Ethernet::getInstance()->updatePieces(fen() + "\n");
 }
 
 void Controller::process(){
 	if(state == CTRL_MOVED){
+		TftLcd::getInstance()->drawBoard(board);
 		Ethernet::getInstance()->setPosition("position fen " + fen() + "\n");
 		state = CTRL_COMPUTING;
 	}
 	else if(state == CTRL_FINISHED){
 		acceptMove();
+		TftLcd::getInstance()->drawBoard(board);
+		Ethernet::getInstance()->updatePieces(fen() + "\n");
 		state = CTRL_WAIT;
 	}
 }
@@ -64,11 +65,14 @@ void Controller::touch(int x){
 void Controller::touch(int x, int y){
 	switch(state){
 	case CTRL_WAIT:
-		if(color_of(piece_on(make_square(File(x), Rank(y)))) == WHITE){
+	{
+		Piece p = piece_on(make_square(File(x), Rank(y)));
+		if(p != NO_PIECE && color_of(p) == WHITE){
 			select(x, y);
 			state = CTRL_SELECTED;
 		}
 		break;
+	}
 	case CTRL_SELECTED:
 		if(selx == x && sely == y){
 			unselect();

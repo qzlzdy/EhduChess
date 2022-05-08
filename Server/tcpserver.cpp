@@ -31,6 +31,7 @@ void TcpServer::tcpRecv(){
     while(length != 0){
         emit emitLog(QString::number(length) + tr(" bytes received"));
         if(memcmp(buffer, "position", 8) == 0){
+            emit updateBoard(QString::fromUtf8(buffer + 13, length - 13));
             emit setPosition(QString::fromUtf8(buffer, length));
         }
         else{
